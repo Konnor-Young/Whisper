@@ -1,0 +1,12 @@
+openai
+Pillow  # This is the PIL library, but you should use 'Pillow', which is the maintained fork of PIL
+pdf2image
+PyPDF2
+pytesseract
+extract-msg
+transformers
+pydub
+imageio-ffmpeg  # This can be used as an ffmpeg wrapper for Python
+langchain
+langchain_openai
+#set env variable to OPENAI_API_KEY
