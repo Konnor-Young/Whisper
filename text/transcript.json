@@ -1,0 +1,19 @@
+[
+    {
+        "empty": "beginning"
+    },
+    {
+        "Customer Name": "Smolder",
+        "Company": "Unknown",
+        "Notes": [
+            "Discussion about a chatbot being developed that does not auto-flag HR issues but should ideally identify HR issues in transcripts.",
+            "The chatbot is expected to split audio files correctly and summarize conversations from audio files.",
+            "Concerns about Smolder's character design in a game, specifically the balance of having a true damage burn which might not be balanced.",
+            "Kevin and others discussed the balance of the game and the impact of making characters like Smolder appealing to a younger, more diverse audience.",
+            "There's an upcoming buff to Smolder that makes it easier to stack, but Kevin is not familiar with the details.",
+            "Discussion on how easy-to-play champions affect the pro scene and the skill ceiling of the game.",
+            "It's suggested that champions that are easy to learn but hard to master are beneficial for attracting new players while retaining a high skill ceiling.",
+            "Smolder is considered easy to pick up with a reasonably high skill ceiling, fitting into the category of being easy to learn and hard to master."
+        ]
+    }
+]

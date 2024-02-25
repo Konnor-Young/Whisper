@@ -1,41 +1,52 @@
-from openai import OpenAI
-from dotenv import load_dotenv
+from audio import is_file_under_size_limit, split_audio_file
+from model import transcribe_audio, generate_meeting_minutes, get_last_tokens
+import json
+import argparse
 import os
 
-# Load the API key from the .env file
-load_dotenv()
-client = OpenAI()
-client.api_key = os.getenv("OPENAI_API_KEY")
+def save_json(data):
+    """Save the data to a JSON file."""
+    with open("text/transcript.json", 'r') as json_file:
+        notes = json.load(json_file)
+    notes.append(data)
+    with open("text/transcript.json", 'w') as json_file:
+        json.dump(notes, json_file, indent=4)
 
-# Function to transcribe audio using Whisper
-def transcribe_audio(file_path):
-    transcript = client.audio.transcriptions.create(
-        model="whisper-1", 
-        file=file_path,
-        response_format="text",
-        language="en",
-        )
-    print("Transcript: "+transcript)
-    return transcript
+def save_text(data):
+    """Save the data to a txt file."""
+    with open(" text/transcript.txt", 'w') as file:
+        file.write(data)
 
-# Function to generate meeting minutes using GPT-4
-def generate_meeting_minutes(transcription):
-    response = client.chat.completions.create(
-      model="gpt-4-0125-preview",  # Replace with gpt-4 model if available
-      messages=[{"role":"system", "content": "You are a helpful assistant who has been taking notes on a meeting. You should now look through the notes and summarize all important information"},
-                {"role": "user", "content": transcription}],
-      temperature=0,
-    )
-    return response.choices[0].message.content
+def main(file_path):
+    with open(file_path, 'rb') as file:
+        if is_file_under_size_limit(file_path):
+            text = ""
+            text = transcribe_audio(file)
+        else:
+            text = ""
+            seg = split_audio_file(file_path)
+            for i in range(len(seg)):
+                if i == 0:
+                    text += transcribe_audio(seg[i])
+                else:
+                    tok = get_last_tokens(text)
+                    text += transcribe_audio(seg[i], tok)
+    notes = generate_meeting_minutes(text)
+    # print(notes)
 
-# Example usage
+    try:
+        notes_json = json.loads(notes)
+        save_json(notes_json)
+        print("The returned notes are in a valid JSON format.")
+        return
+    except json.JSONDecodeError:
+        print("The returned notes are not in a valid JSON format.")
+        save_text(notes)
+        return
+
 if __name__ == "__main__":
-    audio_file = open("VOXTAB_legal_audio.mp3", "rb")
-    transcription = transcribe_audio(audio_file)
-    meeting_minutes = generate_meeting_minutes(transcription)
-    print(meeting_minutes)
-    with open("meeting_minutes.txt", "w") as file:
-        file.write(meeting_minutes)
-    with open("meeting_notes_full.txt", "w") as file:
-        file.write(transcription)
-    # Here, you can add code to save the meeting minutes to a file
+    parser = argparse.ArgumentParser(description="Process an audio file to generate meeting notes.")
+    parser.add_argument('file_path', type=str, help='The path to the audio file to process.')
+    args = parser.parse_args()
+
+    main(args.file_path)
