@@ -73,8 +73,9 @@ def generate_meeting_minutes(transcription):
     """
     try:
         prompt = f"""
-        Given the following meeting transcription, extract and organize the information into a structured JSON format with the keys "Customer Name", "Company", and "Notes". The "Notes" should summarize the key points discussed in the meeting.
-
+        The Following Transcription is from a class the transcription might include comments from both the instructor and the students, but they will not be labeled. Do you best to summarize the class discussion separating the teacher's comments from the students answers/questions.
+        You should output your summary of the class in a JSON format that makes sense with the keys: Teachers Note (a summary of how the class went and what was covered), Student Questions (a summary of the questions asked by students), AI notes (here you can make comments on whether or not you felt certain questions were answered in a way that the students understood.)
+        
         Transcription:
         "{transcription}"
 
