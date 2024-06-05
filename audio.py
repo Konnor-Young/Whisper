@@ -1,6 +1,7 @@
+import librosa
+import tempfile
+import soundfile as sf
 import os
-from pydub import AudioSegment
-from pydub.silence import split_on_silence
 
 def is_file_under_size_limit(file_path, size_limit_mb=25):
     """
@@ -23,34 +24,56 @@ def is_file_under_size_limit(file_path, size_limit_mb=25):
 # else:
 #     print(f"The file exceeds the 25mb size limit.")
 
-def split_audio_file(file_path, min_silence_len=1000, silence_thresh=-40, keep_silence=500):
+def split_audio_by_size(file_path, size_limit_mb=25):
     """
-    Splits an audio file into segments based on silence.
+    Splits an audio file into segments, ensuring each segment is under a specified maximum size.
+    Saves the segments as temporary files and returns their file paths.
 
     Parameters:
     - file_path: The path to the audio file to split.
-    - min_silence_len: The minimum length of silence (in ms) that will be used to split the audio. Default is 1000ms.
-    - silence_thresh: The silence threshold (in dB) below which the audio is considered silent. Default is -40 dB.
-    - keep_silence: The amount of silence (in ms) to leave at the beginning and end of each segment. Default is 500ms.
+    - max_size_mb: The maximum size of each segment in megabytes.
 
     Returns:
-    - A list of AudioSegment instances, each representing a segment of the original audio.
+    - A list of file paths, each representing a temporary audio file of a segment.
     """
-    audio = AudioSegment.from_file(file_path)
+    audio, sr = librosa.load(file_path)
+    total_samples = len(audio)
+    max_size_bytes = size_limit_mb * 1024 * 1024  # Convert MB to bytes
     
-    segments = split_on_silence(
-        audio,
-        min_silence_len=min_silence_len,
-        silence_thresh=silence_thresh,
-        keep_silence=keep_silence
-    )
+    segment_file_paths = []
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        segment_start = 0
+        segment_index = 0
+        
+        while segment_start < total_samples:
+            segment_end = segment_start
+            segment_size_bytes = 0
+            
+            while segment_end < total_samples:
+                segment = audio[segment_start:segment_end]
+                segment_size_bytes = len(segment.tobytes())
+                
+                if segment_size_bytes > max_size_bytes:
+                    break
+                
+                segment_end += 1
+
+            segment = audio[segment_start:segment_end]
+            segment_path = f"{temp_dir}/segment_{segment_index}.wav"
+            sf.write(segment_path, segment, sr, format='WAV')
+            segment_file_paths.append(segment_path)
+            
+            segment_start = segment_end
+            segment_index += 1
     
-    return segments
+    return segment_file_paths
 # Example usage
 # file_path = 'path/to/your/audio/file.mp3'
-# segments = split_audio_file(file_path)
-# Optionally, save the segments to separate files
-# for i, segment in enumerate(segments):
-#     segment_path = f"segment_{i+1}.mp3"
-#     segment.export(segment_path, format="mp3")
-#     print(f"Exported {segment_path}")
+# max_size_mb = 25  # Maximum segment size in megabytes
+
+# segment_file_paths = split_audio_by_size(file_path, max_size_mb)
+
+# for segment_path in segment_file_paths:
+#   # Pass each segment file path to your Whisper transcription function
+    # transcribe_audio(segment_path)

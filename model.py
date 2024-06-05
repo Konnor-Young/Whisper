@@ -80,7 +80,7 @@ def generate_meeting_minutes(transcription):
         "{transcription}"
 
         JSON Format:
-        """
+        """ 
         response = client.chat.completions.create(
             model="gpt-4-0125-preview",
             response_format={ "type": "json_object" },
